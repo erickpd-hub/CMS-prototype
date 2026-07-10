@@ -95,7 +95,8 @@ app.use(express.json({ limit: '10mb' }));
         return res.status(400).json({ error: 'Please provide either text content or an image.' });
       }
 
-      const groqApiKey = process.env.GROQ_API_KEY;
+      const rawGroqApiKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
+      const groqApiKey = rawGroqApiKey ? rawGroqApiKey.replace(/['"]/g, '').trim() : null;
       let copy = '';
       let imageDescription = '';
       
@@ -149,52 +150,66 @@ Format the output as clean text, ready to be published. Keep it engaging and app
 
       let usedGroq = false;
       let errorDetails = '';
+      let usedModel = '';
 
       if (groqApiKey) {
-        try {
-          const messages = [
-            {
-              role: 'system',
-              content: systemInstruction
-            },
-            {
-              role: 'user',
-              content: userMessageContent
-            }
-          ];
+        const groqModels = [
+          'llama-3.3-70b-versatile',
+          'llama-3.1-8b-instant',
+          'llama3-8b-8192',
+          'mixtral-8x7b-32768'
+        ];
 
-          // Call Groq API using standard chat completion with Llama-3.3-70b-versatile
-          const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${groqApiKey}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: 'llama-3.3-70b-versatile',
-              messages,
-              temperature: 0.8,
-              max_tokens: 1024
-            })
-          });
-
-          if (groqResponse.ok) {
-            const groqData = await groqResponse.json();
-            copy = groqData.choices?.[0]?.message?.content || '';
-            if (copy) {
-              usedGroq = true;
-              console.log('Successfully generated social post copy using Groq (Llama 3.3).');
-            }
-          } else {
-            errorDetails = await groqResponse.text();
-            console.warn(`Groq API returned status ${groqResponse.status}: ${errorDetails}. Falling back to Gemini.`);
+        const messages = [
+          {
+            role: 'system',
+            content: systemInstruction
+          },
+          {
+            role: 'user',
+            content: userMessageContent
           }
-        } catch (groqErr: any) {
-          errorDetails = groqErr.message || String(groqErr);
-          console.warn('Groq API call threw an error. Falling back to Gemini:', groqErr);
+        ];
+
+        for (const model of groqModels) {
+          try {
+            console.log(`Attempting copy generation with Groq model: ${model}...`);
+            const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${groqApiKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                model,
+                messages,
+                temperature: 0.8,
+                max_tokens: 1024
+              })
+            });
+
+            if (groqResponse.ok) {
+              const groqData = await groqResponse.json();
+              copy = groqData.choices?.[0]?.message?.content || '';
+              if (copy) {
+                usedGroq = true;
+                usedModel = model;
+                console.log(`Successfully generated copy using Groq model: ${model}`);
+                break;
+              }
+            } else {
+              const modelErr = await groqResponse.text();
+              console.warn(`Groq model ${model} failed with status ${groqResponse.status}: ${modelErr}`);
+              errorDetails += `[${model} failed: Status ${groqResponse.status} - ${modelErr}] `;
+            }
+          } catch (groqErr: any) {
+            const errStr = groqErr.message || String(groqErr);
+            console.warn(`Groq call for model ${model} threw an error:`, groqErr);
+            errorDetails += `[${model} threw: ${errStr}] `;
+          }
         }
       } else {
-        console.log('GROQ_API_KEY environment variable is not defined. Using Gemini 3.5 Flash as the primary copywriting engine.');
+        console.log('GROQ_API_KEY environment variable is not defined. Using Gemini 3.5 Flash as primary engine.');
       }
 
       // Fallback/Primary engine using Gemini 3.5 Flash if Groq failed or was not configured
@@ -215,11 +230,16 @@ Format the output as clean text, ready to be published. Keep it engaging and app
           }
         } catch (geminiErr: any) {
           console.error('Failed to generate copy using both Groq and Gemini:', geminiErr);
-          throw new Error(`AI generation failed. Groq error: ${errorDetails || 'Not configured'}. Gemini error: ${geminiErr.message}`);
+          throw new Error(`AI generation failed. Groq error details: ${errorDetails || 'Not configured'}. Gemini error: ${geminiErr.message}`);
         }
       }
 
-      res.json({ copy });
+      res.json({
+        copy,
+        engine: usedGroq ? 'groq' : 'gemini',
+        model: usedGroq ? usedModel : 'gemini-3.5-flash',
+        groqError: usedGroq ? null : (errorDetails || 'GROQ_API_KEY is not defined')
+      });
     } catch (error: any) {
       console.error('Error in /api/generate-copy:', error);
       res.status(500).json({ error: error.message || 'An error occurred during copywriting generation.' });
