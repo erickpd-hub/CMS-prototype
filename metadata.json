@@ -1,0 +1,8 @@
+{
+  "name": "CMS Prototype",
+  "description": "A comprehensive CMS for marketing focused on real-time content management, post scheduling, and conversion analysis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

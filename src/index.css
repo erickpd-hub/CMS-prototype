@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-m3-primary: var(--m3-primary);
+  --color-m3-on-primary: var(--m3-on-primary);
+  --color-m3-primary-container: var(--m3-primary-container);
+  --color-m3-on-primary-container: var(--m3-on-primary-container);
+  
+  --color-m3-secondary: var(--m3-secondary);
+  --color-m3-secondary-container: var(--m3-secondary-container);
+  --color-m3-on-secondary-container: var(--m3-on-secondary-container);
+
+  --color-m3-surface: var(--m3-surface);
+  --color-m3-on-surface: var(--m3-on-surface);
+  --color-m3-surface-variant: var(--m3-surface-variant);
+  --color-m3-on-surface-variant: var(--m3-on-surface-variant);
+  --color-m3-outline: var(--m3-outline);
+  --color-m3-outline-variant: var(--m3-outline-variant);
+  
+  --shadow-m3-1: 0px 1px 2px 0px rgba(0,0,0,0.3), 0px 1px 3px 1px rgba(0,0,0,0.15);
+  --shadow-m3-2: 0px 1px 2px 0px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15);
+  --shadow-m3-3: 0px 1px 3px 0px rgba(0,0,0,0.3), 0px 4px 8px 3px rgba(0,0,0,0.15);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --m3-primary: #6750A4;
+    --m3-on-primary: #FFFFFF;
+    --m3-primary-container: #EADDFF;
+    --m3-on-primary-container: #21005D;
+    
+    --m3-secondary: #625B71;
+    --m3-secondary-container: #E8DEF8;
+    --m3-on-secondary-container: #1D192B;
+
+    --m3-surface: #FEF7FF;
+    --m3-on-surface: #1D1B20;
+    --m3-surface-variant: #E7E0EC;
+    --m3-on-surface-variant: #49454F;
+    --m3-outline: #79747E;
+    --m3-outline-variant: #CAC4D0;
+  }
+  .dark {
+    --m3-primary: #D0BCFF;
+    --m3-on-primary: #381E72;
+    --m3-primary-container: #4F378B;
+    --m3-on-primary-container: #EADDFF;
+
+    --m3-secondary: #CCC2DC;
+    --m3-secondary-container: #4A4458;
+    --m3-on-secondary-container: #E8DEF8;
+
+    --m3-surface: #141218;
+    --m3-on-surface: #E6E0E9;
+    --m3-surface-variant: #49454F;
+    --m3-on-surface-variant: #CAC4D0;
+    --m3-outline: #938F99;
+    --m3-outline-variant: #49454F;
+  }
+  body {
+    @apply bg-[var(--m3-surface)] text-[var(--m3-on-surface)] transition-colors duration-300 antialiased;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+}
