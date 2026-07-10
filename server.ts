@@ -89,11 +89,7 @@ app.use(express.json({ limit: '10mb' }));
       }
 
       const groqApiKey = process.env.GROQ_API_KEY;
-
-      if (!groqApiKey) {
-        return res.status(400).json({ error: 'Groq API Key is not configured. Please define GROQ_API_KEY in your environment variables.' });
-      }
-
+      let copy = '';
       let imageDescription = '';
       
       // Analyze image using Gemini 3.5 Flash if present to get high-quality scene understanding
@@ -126,7 +122,7 @@ app.use(express.json({ limit: '10mb' }));
         }
       }
 
-      // Build system instruction for Groq in the matching language
+      // Build system instruction for the AI model in the matching language
       const systemInstruction = `You are an expert social media manager and professional copywriter.
 Your task is to write a highly engaging, polished, and creative social media post.
 The user has provided some input text and/or an image description.
@@ -144,40 +140,78 @@ Format the output as clean text, ready to be published. Keep it engaging and app
       }
       userMessageContent += `Generate the engaging copywriting based on the context above.`;
 
-      const messages = [
-        {
-          role: 'system',
-          content: systemInstruction
-        },
-        {
-          role: 'user',
-          content: userMessageContent
+      let usedGroq = false;
+      let errorDetails = '';
+
+      if (groqApiKey) {
+        try {
+          const messages = [
+            {
+              role: 'system',
+              content: systemInstruction
+            },
+            {
+              role: 'user',
+              content: userMessageContent
+            }
+          ];
+
+          // Call Groq API using standard chat completion with Llama-3.3-70b-versatile
+          const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${groqApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'llama-3.3-70b-versatile',
+              messages,
+              temperature: 0.8,
+              max_tokens: 1024
+            })
+          });
+
+          if (groqResponse.ok) {
+            const groqData = await groqResponse.json();
+            copy = groqData.choices?.[0]?.message?.content || '';
+            if (copy) {
+              usedGroq = true;
+              console.log('Successfully generated social post copy using Groq (Llama 3.3).');
+            }
+          } else {
+            errorDetails = await groqResponse.text();
+            console.warn(`Groq API returned status ${groqResponse.status}: ${errorDetails}. Falling back to Gemini.`);
+          }
+        } catch (groqErr: any) {
+          errorDetails = groqErr.message || String(groqErr);
+          console.warn('Groq API call threw an error. Falling back to Gemini:', groqErr);
         }
-      ];
-
-      // Call Groq API using standard chat completion with Llama-3.3-70b-versatile
-      const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${groqApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages,
-          temperature: 0.8,
-          max_tokens: 1024
-        })
-      });
-
-      if (!groqResponse.ok) {
-        const errorText = await groqResponse.text();
-        console.error('Groq API Error Response:', errorText);
-        throw new Error(`Groq API returned status ${groqResponse.status}: ${errorText}`);
+      } else {
+        console.log('GROQ_API_KEY environment variable is not defined. Using Gemini 3.5 Flash as the primary copywriting engine.');
       }
 
-      const groqData = await groqResponse.json();
-      const copy = groqData.choices?.[0]?.message?.content || '';
+      // Fallback/Primary engine using Gemini 3.5 Flash if Groq failed or was not configured
+      if (!usedGroq) {
+        try {
+          console.log('Generating social post copy using Gemini 3.5 Flash...');
+          const geminiResponse = await ai.models.generateContent({
+            model: 'gemini-3.5-flash',
+            contents: userMessageContent,
+            config: {
+              systemInstruction: systemInstruction,
+              temperature: 0.8
+            }
+          });
+          copy = geminiResponse.text || '';
+          if (!copy) {
+            throw new Error('Gemini returned empty text response.');
+          }
+        } catch (geminiErr: any) {
+          console.error('Failed to generate copy using both Groq and Gemini:', geminiErr);
+          throw new Error(`AI generation failed. Groq error: ${errorDetails || 'Not configured'}. Gemini error: ${geminiErr.message}`);
+        }
+      }
+
       res.json({ copy });
     } catch (error: any) {
       console.error('Error in /api/generate-copy:', error);
