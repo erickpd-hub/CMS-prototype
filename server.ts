@@ -39,12 +39,10 @@ const ai = new GoogleGenAI({
   }
 });
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+const app = express();
 
-  // Add JSON parsing middleware with suitable limit for base64 images
-  app.use(express.json({ limit: '10mb' }));
+// Add JSON parsing middleware with suitable limit for base64 images
+app.use(express.json({ limit: '10mb' }));
 
   // API Routes
   app.get('/api/health', (req, res) => {
@@ -498,24 +496,31 @@ Format the output as clean text, ready to be published. Keep it engaging and app
     }
   });
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+  // Vite middleware for development or serving static files
+  async function setupViteOrStatic() {
+    if (process.env.NODE_ENV !== 'production') {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } else {
+      const distPath = path.join(process.cwd(), 'dist');
+      app.use(express.static(distPath));
+      app.get('*', (req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+      });
+    }
+  }
+
+  // Only start the listening server if running locally (not in serverless environments like Vercel)
+  if (!process.env.VERCEL) {
+    setupViteOrStatic().then(() => {
+      const PORT = 3000;
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+      });
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
-
-startServer();
+export default app;
