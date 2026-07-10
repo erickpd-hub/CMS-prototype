@@ -1,13 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Role } from '../types';
-import { auth, db } from '../lib/firebase';
+import { auth, db, firebaseConfig } from '../lib/firebase';
+import { initializeApp, deleteApp } from 'firebase/app';
 import { 
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  getAuth
 } from 'firebase/auth';
 import { 
   collection, 
@@ -78,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             lastName: data.lastName || '',
             email: data.email || '',
             role: data.role || 'user',
+            password: data.password || '',
           });
         });
         
@@ -206,11 +209,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return true;
     }
 
+    // Check if there is a matching user in our users list with this password
+    const foundUser = users.find(u => u.email.trim().toLowerCase() === normalizedEmail);
+    if (foundUser && foundUser.password && foundUser.password === password) {
+      console.log("Logged in successfully using custom assigned password!");
+      localStorage.setItem('demo_user', JSON.stringify(foundUser));
+      setUser(foundUser);
+      return true;
+    }
+
     try {
       await signInWithEmailAndPassword(auth, normalizedEmail, password);
       return true;
     } catch (signInErr: any) {
       console.warn("Firebase sign-in failed, checking demo/local fallback:", signInErr);
+      
+      // If user exists locally but doesn't have a password stored, or Auth failed, use their real details
+      if (foundUser) {
+        localStorage.setItem('demo_user', JSON.stringify(foundUser));
+        setUser(foundUser);
+        return true;
+      }
+
       // Fallback for demo purposes if offline/failed
       const mockUser: User = {
         id: 'user-demo-id-' + Math.random().toString(36).substring(2, 9),
@@ -295,14 +315,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Optimistic update
     setUsers(prev => [...prev, addedUser]);
 
+    let createdUid = '';
+    if (newUser.email && newUser.password) {
+      try {
+        const secondaryApp = initializeApp(firebaseConfig, 'secondary-' + tempId);
+        const secondaryAuth = getAuth(secondaryApp);
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, newUser.email.trim().toLowerCase(), newUser.password);
+        createdUid = userCredential.user.uid;
+        await deleteApp(secondaryApp);
+        console.log("Successfully created secondary auth user with UID:", createdUid);
+      } catch (authErr: any) {
+        console.warn("Firebase Auth secondary creation failed (likely offline or duplicate):", authErr);
+      }
+    }
+
     try {
-      const docRef = doc(collection(db, 'users'));
+      const docId = createdUid || tempId;
+      const docRef = doc(db, 'users', docId);
       await setDoc(docRef, {
         firstName: newUser.firstName,
         lastName: newUser.lastName,
         email: newUser.email,
-        role: newUser.role
+        role: newUser.role,
+        password: newUser.password || ''
       });
+      
+      if (createdUid) {
+        setUsers(prev => prev.map(u => u.id === tempId ? { ...u, id: createdUid } : u));
+      }
     } catch (err) {
       console.warn("Could not write user to Firebase Firestore, added locally:", err);
     }

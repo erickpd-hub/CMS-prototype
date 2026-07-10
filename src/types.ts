@@ -8,6 +8,7 @@ export interface User {
   lastName: string;
   email: string;
   role: Role;
+  password?: string;
 }
 
 export interface Post {

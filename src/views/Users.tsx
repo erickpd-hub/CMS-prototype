@@ -18,6 +18,7 @@ export default function Users({ addToast }: { addToast?: (msg: string, type: Toa
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<Role>('user');
+  const [password, setPassword] = useState('');
 
   if (currentUser?.role !== 'admin') {
     return (
@@ -35,12 +36,14 @@ export default function Users({ addToast }: { addToast?: (msg: string, type: Toa
       setLastName(user.lastName);
       setEmail(user.email);
       setRole(user.role);
+      setPassword(user.password || '');
     } else {
       setEditingUser(null);
       setFirstName('');
       setLastName('');
       setEmail('');
       setRole('user');
+      setPassword('');
     }
     setIsModalOpen(true);
   };
@@ -52,16 +55,16 @@ export default function Users({ addToast }: { addToast?: (msg: string, type: Toa
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !lastName || !email) {
-      addToast?.(t('Please fill all fields'), 'error');
+    if (!firstName || !lastName || !email || !password) {
+      addToast?.(t('Please fill all fields, including password'), 'error');
       return;
     }
 
     if (editingUser) {
-      updateUser(editingUser.id, { firstName, lastName, email, role });
+      updateUser(editingUser.id, { firstName, lastName, email, role, password });
       addToast?.(t('User updated successfully'), 'success');
     } else {
-      addUser({ firstName, lastName, email, role });
+      addUser({ firstName, lastName, email, role, password });
       addToast?.(t('User created successfully'), 'success');
     }
     closeModal();
@@ -195,6 +198,11 @@ export default function Users({ addToast }: { addToast?: (msg: string, type: Toa
                 <div className="bg-[var(--color-m3-surface-variant)] rounded-t-xl rounded-b-md border-b-2 border-[var(--color-m3-on-surface-variant)] focus-within:border-[var(--color-m3-primary)] px-4 py-2 transition-colors">
                   <label className="text-xs text-[var(--color-m3-on-surface-variant)] font-medium">{t('Email Address')}</label>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-transparent border-none outline-none text-[var(--color-m3-on-surface)] pt-1" />
+                </div>
+
+                <div className="bg-[var(--color-m3-surface-variant)] rounded-t-xl rounded-b-md border-b-2 border-[var(--color-m3-on-surface-variant)] focus-within:border-[var(--color-m3-primary)] px-4 py-2 transition-colors">
+                  <label className="text-xs text-[var(--color-m3-on-surface-variant)] font-medium">{t('Password')}</label>
+                  <input type="text" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-transparent border-none outline-none text-[var(--color-m3-on-surface)] pt-1" placeholder={t('Assign a secure password')} />
                 </div>
 
                 <div className="bg-[var(--color-m3-surface-variant)] rounded-t-xl rounded-b-md border-b-2 border-[var(--color-m3-on-surface-variant)] focus-within:border-[var(--color-m3-primary)] px-4 py-2 transition-colors">
