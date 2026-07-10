@@ -7,28 +7,26 @@ import fs from 'fs';
 import { initializeApp as initializeFirebaseApp } from 'firebase/app';
 import { getFirestore, doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 
+import firebaseConfig from './firebase-applet-config.json';
+
 dotenv.config();
 
 // Initialize Firebase for Backend Use
-const firebaseConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
 let db: any = null;
 
-if (fs.existsSync(firebaseConfigPath)) {
-  try {
-    const firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, 'utf8'));
-    const firebaseApp = initializeFirebaseApp({
-      apiKey: firebaseConfig.apiKey,
-      authDomain: firebaseConfig.authDomain,
-      projectId: firebaseConfig.projectId,
-      storageBucket: firebaseConfig.storageBucket,
-      messagingSenderId: firebaseConfig.messagingSenderId,
-      appId: firebaseConfig.appId,
-    });
-    db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
-    console.log('Firebase backend SDK initialized successfully on database:', firebaseConfig.firestoreDatabaseId);
-  } catch (err) {
-    console.error('Error initializing Firebase on server backend:', err);
-  }
+try {
+  const firebaseApp = initializeFirebaseApp({
+    apiKey: firebaseConfig.apiKey,
+    authDomain: firebaseConfig.authDomain,
+    projectId: firebaseConfig.projectId,
+    storageBucket: firebaseConfig.storageBucket,
+    messagingSenderId: firebaseConfig.messagingSenderId,
+    appId: firebaseConfig.appId,
+  });
+  db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+  console.log('Firebase backend SDK initialized successfully on database:', firebaseConfig.firestoreDatabaseId);
+} catch (err) {
+  console.error('Error initializing Firebase on server backend:', err);
 }
 
 // Ensure Gemini Client is initialized with appropriate headers for telemetry
