@@ -7,36 +7,67 @@ import fs from 'fs';
 import { initializeApp as initializeFirebaseApp } from 'firebase/app';
 import { getFirestore, doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 
-import firebaseConfig from './firebase-applet-config.json';
-
 dotenv.config();
 
 // Initialize Firebase for Backend Use
 let db: any = null;
+let firebaseConfig: any = {
+  apiKey: process.env.FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN || process.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID || process.env.VITE_FIREBASE_APP_ID,
+  firestoreDatabaseId: process.env.FIREBASE_FIRESTORE_DATABASE_ID || process.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID,
+};
+
+// Fallback to local files if environment variables are not fully configured
+if (!firebaseConfig.apiKey) {
+  const firebaseConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
+  const firebaseConfigAltPath = path.join(process.cwd(), 'firebase-config.json');
+  let configPath = '';
+
+  if (fs.existsSync(firebaseConfigPath)) {
+    configPath = firebaseConfigPath;
+  } else if (fs.existsSync(firebaseConfigAltPath)) {
+    configPath = firebaseConfigAltPath;
+  }
+
+  if (configPath) {
+    try {
+      const fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      firebaseConfig = {
+        ...firebaseConfig,
+        ...fileConfig,
+      };
+    } catch (err) {
+      console.error('Error reading local Firebase config file:', err);
+    }
+  }
+}
 
 try {
-  const firebaseApp = initializeFirebaseApp({
-    apiKey: firebaseConfig.apiKey,
-    authDomain: firebaseConfig.authDomain,
-    projectId: firebaseConfig.projectId,
-    storageBucket: firebaseConfig.storageBucket,
-    messagingSenderId: firebaseConfig.messagingSenderId,
-    appId: firebaseConfig.appId,
-  });
-  db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
-  console.log('Firebase backend SDK initialized successfully on database:', firebaseConfig.firestoreDatabaseId);
+  if (firebaseConfig.apiKey) {
+    const firebaseApp = initializeFirebaseApp({
+      apiKey: firebaseConfig.apiKey,
+      authDomain: firebaseConfig.authDomain,
+      projectId: firebaseConfig.projectId,
+      storageBucket: firebaseConfig.storageBucket,
+      messagingSenderId: firebaseConfig.messagingSenderId,
+      appId: firebaseConfig.appId,
+    });
+    db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+    console.log('Firebase backend SDK initialized successfully.');
+  } else {
+    console.warn('Firebase configuration missing. Please set environment variables.');
+  }
 } catch (err) {
   console.error('Error initializing Firebase on server backend:', err);
 }
 
-// Ensure Gemini Client is initialized with appropriate headers for telemetry
+// Ensure Gemini Client is initialized
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    }
-  }
 });
 
 const app = express();
