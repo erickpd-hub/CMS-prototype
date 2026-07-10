@@ -75,3 +75,10 @@
     mix-blend-mode: normal;
   }
 }
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+

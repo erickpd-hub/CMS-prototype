@@ -15,6 +15,7 @@ import Profile from './views/Profile';
 import Users from './views/Users';
 import Login from './views/Login';
 import AEO from './views/AEO';
+import { ViewSkeleton } from './components/Skeleton';
 import ToastContainer, { ToastMessage, ToastType } from './components/Toast';
 import { motion, AnimatePresence } from 'motion/react';
 import { LanguageProvider } from './context/LanguageContext';
@@ -25,6 +26,16 @@ function AppContent() {
   const { user, loading } = useAuth();
   const { notifications, addNotification } = useNotifications();
   const [currentView, setCurrentView] = useState<ViewId>('dashboard');
+  const [isViewLoading, setIsViewLoading] = useState(false);
+
+  const handleNavigate = (view: ViewId) => {
+    setIsViewLoading(true);
+    setCurrentView(view);
+    setTimeout(() => {
+      setIsViewLoading(false);
+    }, 450);
+  };
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark' ||
@@ -143,16 +154,19 @@ function AppContent() {
   }
 
   const renderView = () => {
+    if (isViewLoading) {
+      return <ViewSkeleton view={currentView} />;
+    }
     switch (currentView) {
-      case 'dashboard': return <Dashboard onNavigate={setCurrentView} />;
+      case 'dashboard': return <Dashboard onNavigate={handleNavigate} />;
       case 'campaigns': return <Campaigns addToast={addToast} />;
       case 'scheduler': return <Scheduler addToast={addToast} />;
-      case 'aeo': return <AEO onNavigate={setCurrentView} addToast={addToast} />;
+      case 'aeo': return <AEO onNavigate={handleNavigate} addToast={addToast} />;
       case 'analytics': return <Analytics />;
       case 'integrations': return <Integrations addToast={addToast} />;
       case 'profile': return <Profile addToast={addToast} />;
       case 'users': return <Users addToast={addToast} />;
-      default: return <Dashboard onNavigate={setCurrentView} />;
+      default: return <Dashboard onNavigate={handleNavigate} />;
     }
   };
 
@@ -167,7 +181,7 @@ function AppContent() {
           <motion.div key="app" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="h-full w-full">
             <Layout 
               currentView={currentView} 
-              onNavigate={setCurrentView}
+              onNavigate={handleNavigate}
               isDarkMode={isDarkMode}
               toggleDarkMode={toggleDarkMode}
             >
