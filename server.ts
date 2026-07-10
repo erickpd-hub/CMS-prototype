@@ -1,6 +1,5 @@
 import express from 'express';
 import path from 'path';
-import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -65,10 +64,18 @@ try {
   console.error('Error initializing Firebase on server backend:', err);
 }
 
-// Ensure Gemini Client is initialized
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+// Ensure Gemini Client is initialized lazily to avoid crash-on-startup if key is missing or when loading module
+let aiInstance: GoogleGenAI | null = null;
+function getGeminiClient(): GoogleGenAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not defined in the environment variables.');
+  }
+  if (!aiInstance) {
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+}
 
 const app = express();
 
@@ -101,7 +108,7 @@ app.use(express.json({ limit: '10mb' }));
             : 'Describe this image in detail for a copywriter. Mention key objects, colors, readable text, vibe, and the emotion it conveys to help create an engaging social media post.';
           
           try {
-            const geminiResponse = await ai.models.generateContent({
+            const geminiResponse = await getGeminiClient().models.generateContent({
               model: 'gemini-3.5-flash',
               contents: [
                 {
@@ -194,7 +201,7 @@ Format the output as clean text, ready to be published. Keep it engaging and app
       if (!usedGroq) {
         try {
           console.log('Generating social post copy using Gemini 3.5 Flash...');
-          const geminiResponse = await ai.models.generateContent({
+          const geminiResponse = await getGeminiClient().models.generateContent({
             model: 'gemini-3.5-flash',
             contents: userMessageContent,
             config: {
@@ -564,6 +571,7 @@ Format the output as clean text, ready to be published. Keep it engaging and app
   // Vite middleware for development or serving static files
   async function setupViteOrStatic() {
     if (process.env.NODE_ENV !== 'production') {
+      const { createServer: createViteServer } = await import('vite');
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: 'spa',
