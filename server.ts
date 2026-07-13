@@ -20,30 +20,30 @@ let firebaseConfig: any = {
   firestoreDatabaseId: process.env.FIREBASE_FIRESTORE_DATABASE_ID || process.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID,
 };
 
-// Fallback to local files if environment variables are not fully configured
-if (!firebaseConfig.apiKey) {
-  const firebaseConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
-  const firebaseConfigAltPath = path.join(process.cwd(), 'firebase-config.json');
-  let configPath = '';
+  // Load Firebase config from environment variables. In development, optionally fall back to local JSON files.
+  if (!firebaseConfig.apiKey && process.env.NODE_ENV !== 'production') {
+    const firebaseConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
+    const firebaseConfigAltPath = path.join(process.cwd(), 'firebase-config.json');
+    let configPath = '';
 
-  if (fs.existsSync(firebaseConfigPath)) {
-    configPath = firebaseConfigPath;
-  } else if (fs.existsSync(firebaseConfigAltPath)) {
-    configPath = firebaseConfigAltPath;
-  }
+    if (fs.existsSync(firebaseConfigPath)) {
+      configPath = firebaseConfigPath;
+    } else if (fs.existsSync(firebaseConfigAltPath)) {
+      configPath = firebaseConfigAltPath;
+    }
 
-  if (configPath) {
-    try {
-      const fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      firebaseConfig = {
-        ...firebaseConfig,
-        ...fileConfig,
-      };
-    } catch (err) {
-      console.error('Error reading local Firebase config file:', err);
+    if (configPath) {
+      try {
+        const fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        firebaseConfig = {
+          ...firebaseConfig,
+          ...fileConfig,
+        };
+      } catch (err) {
+        console.error('Error reading local Firebase config file:', err);
+      }
     }
   }
-}
 
 try {
   if (firebaseConfig.apiKey) {
@@ -609,7 +609,7 @@ Format the output as clean text, ready to be published. Keep it engaging and app
   // Only start the listening server if running locally (not in serverless environments like Vercel)
   if (!process.env.VERCEL) {
     setupViteOrStatic().then(() => {
-      const PORT = 3000;
+      const PORT = process.env.PORT || 3001;
       app.listen(PORT, '0.0.0.0', () => {
         console.log(`Server running on http://localhost:${PORT}`);
       });

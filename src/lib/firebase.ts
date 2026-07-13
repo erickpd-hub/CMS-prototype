@@ -6,12 +6,12 @@ import { getFirestore } from 'firebase/firestore';
 const env = (import.meta as any).env || {};
 
 const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY || 'AIzaSyDummyKeyForOfflineBypassOnly123456',
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || 'dummy-app.firebaseapp.com',
-  projectId: env.VITE_FIREBASE_PROJECT_ID || 'dummy-app-id',
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || 'dummy-app.appspot.com',
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-  appId: env.VITE_FIREBASE_APP_ID || '1:123456789:web:abcdef',
+  apiKey: env.VITE_FIREBASE_API_KEY || '',
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || '',
+  projectId: env.VITE_FIREBASE_PROJECT_ID || '',
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+  appId: env.VITE_FIREBASE_APP_ID || '',
   firestoreDatabaseId: env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || undefined,
 };
 
@@ -28,10 +28,10 @@ try {
 } catch (err) {
   console.warn('Firebase client SDK failed to initialize with config, using fallback:', err);
   // Create a minimal placeholder app so getAuth/getFirestore don't fail immediately on load
-  app = initializeApp({
-    apiKey: 'AIzaSyDummyKeyForOfflineBypassOnly123456',
-    projectId: 'dummy-app-id'
-  });
+    app = initializeApp({
+      apiKey: '',
+      projectId: ''
+    });
 }
 
 export const auth = getAuth(app);
