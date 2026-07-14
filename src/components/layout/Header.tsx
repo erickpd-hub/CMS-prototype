@@ -75,7 +75,7 @@ export default function Header({ isDarkMode, toggleDarkMode, onMenuClick, curren
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 bg-[var(--color-m3-surface)] text-[var(--color-m3-on-surface)] transition-colors sm:px-6">
+    <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 bg-transparent text-[var(--color-m3-on-surface)] transition-colors sm:px-6">
       <div className="flex items-center gap-2">
         <button
           onClick={onMenuClick}

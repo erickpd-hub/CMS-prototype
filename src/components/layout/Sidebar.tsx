@@ -72,15 +72,14 @@ export default function Sidebar({ currentView, onNavigate, isOpen, onClose }: Si
               {!isActive && (
                 <div className="absolute inset-0 bg-black/40 dark:bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
               )}
-              <div className="relative flex flex-col items-center justify-center z-10">
-                {isActive ? (
-                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                ) : (
-                  <>
-                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 transition-colors group-hover:text-white" />
-                    <span className="text-[7px] uppercase tracking-wider hidden sm:block truncate w-12 text-center mt-1 transition-colors group-hover:text-white">{item.label}</span>
-                  </>
-                )}
+              <div className="relative flex flex-col items-center justify-center z-10 w-full h-full">
+                <Icon className={isActive ? "w-5 h-5 sm:w-6 sm:h-6" : "w-4 h-4 sm:w-5 sm:h-5 transition-colors group-hover:text-white"} />
+                {/* Tooltip */}
+                <div className="absolute left-full ml-4 px-3 py-1.5 bg-black text-white text-[11px] font-medium tracking-wide rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[60] transition-all duration-200 shadow-lg translate-x-1 group-hover:translate-x-0 hidden sm:block">
+                  {item.label}
+                  {/* Tooltip Arrow */}
+                  <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-black"></div>
+                </div>
               </div>
             </button>
           );
