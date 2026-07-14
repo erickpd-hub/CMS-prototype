@@ -16,7 +16,7 @@ export default function Layout({ children, currentView, onNavigate, isDarkMode, 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[var(--color-m3-surface)] text-[var(--color-m3-on-surface)] selection:bg-[var(--color-m3-primary-container)] selection:text-[var(--color-m3-on-primary-container)] font-sans">
+    <div className="flex h-screen w-screen overflow-hidden bg-white dark:bg-zinc-900 text-[var(--color-m3-on-surface)] selection:bg-[var(--color-m3-primary-container)] selection:text-[var(--color-m3-on-primary-container)] font-sans">
       <Sidebar 
         currentView={currentView} 
         onNavigate={onNavigate} 
@@ -24,7 +24,7 @@ export default function Layout({ children, currentView, onNavigate, isDarkMode, 
         onClose={() => setIsSidebarOpen(false)} 
       />
 
-      <div className="flex flex-col flex-1 w-full overflow-hidden bg-[var(--color-m3-surface)]">
+      <div className="flex flex-col flex-1 w-full overflow-hidden bg-gray-400 dark:bg-zinc-800 rounded-tl-3xl my-0 ml-0 lg:my-2 lg:ml-2">
         <Header 
           isDarkMode={isDarkMode} 
           toggleDarkMode={toggleDarkMode} 
@@ -41,7 +41,7 @@ export default function Layout({ children, currentView, onNavigate, isDarkMode, 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="max-w-7xl mx-auto h-full"
+              className="max-w-7xl mx-auto h-full bg-[var(--color-m3-surface)] rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200 dark:border-gray-800"
             >
               {children}
             </motion.div>
