@@ -1,6 +1,6 @@
 import React from 'react';
 import { ViewId } from '../../types';
-import { LayoutDashboard, CalendarDays, BarChart3, Plug, X, Megaphone, Users as UsersIcon, Sparkles } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, BarChart3, Plug, X, Megaphone, Users as UsersIcon, Sparkles, Box, User as UserAvatar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -39,9 +39,10 @@ export default function Sidebar({ currentView, onNavigate, isOpen, onClose }: Si
       {/* Top: LOGO */}
       <div 
         onClick={() => handleNavigate('dashboard')}
-        className="flex items-center justify-center text-black dark:text-white text-sm font-bold tracking-widest cursor-pointer hover:opacity-70 transition-opacity"
+        className="flex items-center justify-center text-black dark:text-white cursor-pointer hover:opacity-70 transition-opacity"
+        title="Dashboard"
       >
-        LOGO
+        <Box className="w-8 h-8" />
       </div>
 
       {/* Middle: Pill Nav */}
@@ -73,7 +74,7 @@ export default function Sidebar({ currentView, onNavigate, isOpen, onClose }: Si
               )}
               <div className="relative flex flex-col items-center justify-center z-10">
                 {isActive ? (
-                  <span className="text-[10px] font-bold tracking-wider">BTN</span>
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : (
                   <>
                     <Icon className="w-4 h-4 sm:w-5 sm:h-5 transition-colors group-hover:text-white" />
@@ -89,12 +90,13 @@ export default function Sidebar({ currentView, onNavigate, isOpen, onClose }: Si
       {/* Bottom: PIC */}
       <div 
         onClick={() => handleNavigate('profile')} 
-        className="flex items-center justify-center text-black dark:text-white text-sm font-bold cursor-pointer hover:opacity-70 transition-opacity"
+        className="flex items-center justify-center text-black dark:text-white cursor-pointer hover:opacity-70 transition-opacity"
+        title="Profile"
       >
         {user?.avatarUrl ? (
           <img src={user.avatarUrl} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
         ) : (
-          user ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}` : 'PIC'
+          <UserAvatar className="w-8 h-8" />
         )}
       </div>
     </div>
