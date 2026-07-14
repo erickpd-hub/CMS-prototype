@@ -39,13 +39,13 @@ export default function Sidebar({ currentView, onNavigate, isOpen, onClose }: Si
       {/* Top: LOGO */}
       <div 
         onClick={() => handleNavigate('dashboard')}
-        className="w-16 h-16 rounded-2xl bg-[#454247] flex items-center justify-center text-white text-xs font-bold tracking-widest cursor-pointer shadow-lg hover:bg-[#555257] transition-colors"
+        className="flex items-center justify-center text-black dark:text-white text-sm font-bold tracking-widest cursor-pointer hover:opacity-70 transition-opacity"
       >
         LOGO
       </div>
 
       {/* Middle: Pill Nav */}
-      <nav className="flex flex-col items-center py-4 px-2 space-y-4 bg-[#E0E0E0] dark:bg-zinc-800 rounded-full shadow-inner my-auto">
+      <nav className="flex flex-col items-center py-4 px-2 space-y-3 bg-[#E0E0E0] dark:bg-zinc-800 rounded-full shadow-inner my-auto">
         {navItems.map((item) => {
           const isActive = currentView === item.id;
           const Icon = item.icon;
@@ -54,19 +54,30 @@ export default function Sidebar({ currentView, onNavigate, isOpen, onClose }: Si
               key={item.id}
               onClick={() => handleNavigate(item.id)}
               title={item.label}
-              className={`w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center rounded-full transition-all duration-200 ${
+              className={`relative w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-full transition-colors duration-200 group ${
                 isActive
-                  ? 'bg-black text-white shadow-md'
-                  : 'text-gray-600 hover:bg-gray-300 dark:text-gray-400 dark:hover:bg-zinc-700'
+                  ? 'text-white'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-white'
               }`}
             >
-              <div className="flex flex-col items-center justify-center">
+              {isActive && (
+                <motion.div
+                  layoutId="activeNavIndicator"
+                  className="absolute inset-0 bg-black dark:bg-zinc-900 rounded-full shadow-md"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
+              {/* Dark background on hover to make white icon visible */}
+              {!isActive && (
+                <div className="absolute inset-0 bg-black/40 dark:bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              )}
+              <div className="relative flex flex-col items-center justify-center z-10">
                 {isActive ? (
                   <span className="text-[10px] font-bold tracking-wider">BTN</span>
                 ) : (
                   <>
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 mb-1" />
-                    <span className="text-[8px] uppercase tracking-wider hidden sm:block truncate w-14 text-center">{item.label}</span>
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 transition-colors group-hover:text-white" />
+                    <span className="text-[7px] uppercase tracking-wider hidden sm:block truncate w-12 text-center mt-1 transition-colors group-hover:text-white">{item.label}</span>
                   </>
                 )}
               </div>
@@ -78,10 +89,10 @@ export default function Sidebar({ currentView, onNavigate, isOpen, onClose }: Si
       {/* Bottom: PIC */}
       <div 
         onClick={() => handleNavigate('profile')} 
-        className="w-16 h-16 rounded-2xl bg-[#454247] flex items-center justify-center text-white text-xs font-bold cursor-pointer shadow-lg hover:bg-[#555257] transition-colors relative"
+        className="flex items-center justify-center text-black dark:text-white text-sm font-bold cursor-pointer hover:opacity-70 transition-opacity"
       >
         {user?.avatarUrl ? (
-          <img src={user.avatarUrl} alt="Profile" className="w-full h-full rounded-2xl object-cover" />
+          <img src={user.avatarUrl} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
         ) : (
           user ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}` : 'PIC'
         )}

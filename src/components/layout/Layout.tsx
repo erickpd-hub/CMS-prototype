@@ -33,7 +33,7 @@ export default function Layout({ children, currentView, onNavigate, isDarkMode, 
           onNavigate={onNavigate}
         />
         
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}
@@ -41,7 +41,7 @@ export default function Layout({ children, currentView, onNavigate, isDarkMode, 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="max-w-7xl mx-auto h-full bg-[var(--color-m3-surface)] rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200 dark:border-gray-800"
+              className="w-full h-full p-4 sm:p-6 lg:p-8"
             >
               {children}
             </motion.div>
